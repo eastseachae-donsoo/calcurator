@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>수익 계산기 — OREUM</title>
+<style>
+  :root {
+    --blue: #378ADD;
+    --blue-light: #E6F1FB;
+    --blue-dark: #0C447C;
+    --blue-mid: #185FA5;
+    --green-light: #EAF3DE;
+    --green-dark: #27500A;
+    --green-mid: #3B6D11;
+    --gray-bg: #F5F5F3;
+    --gray-card: #FFFFFF;
+    --gray-surface: #F1EFE8;
+    --gray-border: rgba(0,0,0,0.1);
+    --gray-border-md: rgba(0,0,0,0.18);
+    --text-primary: #1A1A18;
+    --text-secondary: #5F5E5A;
+    --text-tertiary: #888780;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+    background: var(--gray-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  header {
+    background: #fff;
+    border-bottom: 0.5px solid var(--gray-border);
+    padding: 18px 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-inner { max-width: 600px; margin: 0 auto; }
+  .header-brand { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--blue); text-transform: uppercase; margin-bottom: 2px; }
+  .header-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+
+  main { max-width: 600px; margin: 0 auto; padding: 20px 16px 0; }
+
+  .section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-tertiary);
+    margin-bottom: 10px;
+  }
+
+  .card {
+    background: var(--gray-card);
+    border: 0.5px solid var(--gray-border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+
+  .input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .input-row:last-of-type { margin-bottom: 0; }
+  .input-label { font-size: 13px; color: var(--text-secondary); min-width: 120px; line-height: 1.4; }
+  .input-wrap { position: relative; flex: 1; }
+  .input-wrap input {
+    width: 100%; padding: 11px 40px 11px 14px;
+    border: 0.5px solid var(--gray-border-md);
+    border-radius: var(--radius-md);
+    font-size: 15px; font-weight: 500;
+    text-align: right;
+    background: var(--gray-bg);
+    color: var(--text-primary);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .input-wrap input:focus { border-color: var(--blue); background: #fff; }
+  .input-unit {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px; color: var(--text-tertiary);
+    pointer-events: none;
+  }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .total-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0 0; margin-top: 14px;
+    border-top: 0.5px solid var(--gray-border);
+  }
+  .total-label { font-size: 13px; color: var(--text-secondary); }
+  .total-value { font-size: 17px; font-weight: 600; color: var(--text-primary); }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab {
+    flex: 1; padding: 11px 0;
+    border: 0.5px solid var(--gray-border-md);
+    border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    background: #fff; color: var(--text-tertiary);
+    transition: all 0.15s; text-align: center;
+  }
+  .tab.active {
+    background: var(--blue); color: #fff;
+    border-color: var(--blue);
+  }
+
+  .rate-group { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
+  .rate-btn {
+    padding: 8px 16px;
+    border: 0.5px solid var(--gray-border-md);
+    border-radius: var(--radius-md);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    background: var(--gray-bg); color: var(--text-secondary);
+    transition: all 0.15s;
+    flex: 1; text-align: center; min-width: 60px;
+  }
+  .rate-btn.selected {
+    background: var(--blue-light);
+    border-color: var(--blue);
+    color: var(--blue-dark);
+  }
+
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .metric { border-radius: var(--radius-md); padding: 14px; }
+  .metric.highlight { background: var(--blue-light); }
+  .metric.bonus-metric { background: var(--green-light); }
+  .metric.total-metric {
+    background: #fff;
+    border: 0.5px solid var(--gray-border-md);
+    padding: 16px;
+  }
+  .metric-label { font-size: 11px; font-weight: 500; margin-bottom: 6px; color: var(--text-tertiary); }
+  .metric.highlight .metric-label { color: var(--blue-mid); }
+  .metric.bonus-metric .metric-label { color: var(--green-mid); }
+  .metric-value { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+  .metric.highlight .metric-value { color: var(--blue-dark); }
+  .metric.bonus-metric .metric-value { color: var(--green-dark); }
+
+  .total-row-inner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .total-amount { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+  .pct-badge {
+    font-size: 13px; font-weight: 600;
+    padding: 4px 12px; border-radius: 99px;
+    background: var(--blue-light); color: var(--blue-dark);
+    white-space: nowrap;
+  }
+
+  .bonus-info {
+    font-size: 12px; line-height: 1.7;
+    border-radius: var(--radius-md);
+    padding: 12px 14px; margin-bottom: 12px;
+    background: var(--gray-surface); color: var(--text-secondary);
+    white-space: pre-line;
+  }
+  .bonus-info.active { background: var(--green-light); color: var(--green-mid); }
+
+  .divider-label {
+    font-size: 11px; color: var(--text-tertiary);
+    text-align: center; margin: 10px 0 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .breakdown {
+    font-size: 12px; line-height: 1.7;
+    border-radius: var(--radius-md);
+    padding: 12px 14px; margin-top: 10px;
+    background: var(--gray-surface); color: var(--text-secondary);
+    white-space: pre-line;
+  }
+
+  .net-section {
+    margin-top: 16px;
+    border-top: 0.5px solid var(--gray-border);
+    padding-top: 16px;
+  }
+  .net-divider {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-tertiary);
+    margin-bottom: 12px;
+  }
+  .net-rate-group { display: flex; gap: 7px; margin-bottom: 12px; }
+  .net-rate-btn {
+    flex: 1; padding: 8px 0;
+    border: 0.5px solid var(--gray-border-md);
+    border-radius: var(--radius-md);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; text-align: center;
+    background: var(--gray-bg); color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .net-rate-btn.selected {
+    background: #FAEEDA; border-color: #BA7517; color: #633806;
+  }
+  .net-formula {
+    font-size: 12px; line-height: 1.7; color: var(--text-secondary);
+    background: var(--gray-surface); border-radius: var(--radius-md);
+    padding: 10px 14px; margin-bottom: 10px;
+    white-space: pre-line;
+  }
+  .net-metric {
+    background: #FAEEDA !important;
+    border-radius: var(--radius-md); padding: 16px;
+  }
+  .net-metric .metric-label { color: #854F0B; }
+  .net-metric .total-amount { color: #412402; }
+  .net-badge { background: #FAC775 !important; color: #412402 !important; }
+
+  @media (max-width: 380px) {
+    .input-label { min-width: 100px; font-size: 12px; }
+    .total-amount { font-size: 19px; }
+    .metric-value { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-brand">OREUM</div>
+    <div class="header-title">수익 계산기</div>
+  </div>
+</header>
+
+<main>
+
+  <div class="section-label">발주액 입력</div>
+  <div class="card">
+    <div class="input-row">
+      <span class="input-label">멀티미디어<br>자재비</span>
+      <div class="input-wrap">
+        <input type="number" id="media" placeholder="0" min="0" inputmode="numeric" oninput="calc()" />
+        <span class="input-unit">원</span>
+      </div>
+    </div>
+    <div class="input-row">
+      <span class="input-label">공사비<br>(인테리어비)</span>
+      <div class="input-wrap">
+        <input type="number" id="const" placeholder="0" min="0" inputmode="numeric" oninput="calc()" />
+        <span class="input-unit">원</span>
+      </div>
+    </div>
+    <div class="total-row">
+      <span class="total-label">전체 발주액</span>
+      <span class="total-value" id="total-display">0 원</span>
+    </div>
+  </div>
+
+  <div class="section-label">수익 옵션 선택</div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(1)">옵션 1 — 발주액 기준</div>
+    <div class="tab" onclick="switchTab(2)">옵션 2 — 자재비 기준</div>
+  </div>
+
+  <!-- 옵션 1 -->
+  <div id="panel1" class="card">
+    <div class="section-label" style="margin-bottom:8px">수익 비율 선택</div>
+    <div class="rate-group" id="rg1">
+      <button class="rate-btn selected" onclick="selectRate(1,30)">30%</button>
+      <button class="rate-btn" onclick="selectRate(1,35)">35%</button>
+    </div>
+    <div id="bonus-info1" class="bonus-info">공사비가 발주액의 15%를 초과하면 초과분의 85%가 추가 수익으로 발생합니다.</div>
+    <div class="divider-label">── 결과 ──</div>
+    <div class="result-grid">
+      <div class="metric highlight">
+        <div class="metric-label" id="base-label1">기본 수익 (발주액 × 30%)</div>
+        <div class="metric-value" id="base1">0 원</div>
+      </div>
+      <div class="metric bonus-metric">
+        <div class="metric-label">공사비 초과 추가 수익</div>
+        <div class="metric-value" id="bonus1">0 원</div>
+      </div>
+    </div>
+    <div class="metric total-metric">
+      <div class="metric-label">최종 수익 합계</div>
+      <div class="total-row-inner">
+        <span class="total-amount" id="total1">0 원</span>
+        <span class="pct-badge" id="pct1">발주액의 —</span>
+      </div>
+    </div>
+    <div id="breakdown1" class="breakdown" style="display:none"></div>
+
+    <div class="net-section" id="net-section1" style="display:none">
+      <div class="net-divider">순수익 (Net) 계산</div>
+      <div class="net-rate-group" id="nrg1">
+        <button class="net-rate-btn selected" onclick="selectNetRate(1,35)">35%</button>
+        <button class="net-rate-btn" onclick="selectNetRate(1,37)">37%</button>
+        <button class="net-rate-btn" onclick="selectNetRate(1,40)">40%</button>
+      </div>
+      <div class="net-formula" id="net-formula1"></div>
+      <div class="metric net-metric">
+        <div class="metric-label">순수익 (Net)</div>
+        <div class="total-row-inner">
+          <span class="total-amount" id="net-val1">0 원</span>
+          <span class="pct-badge net-badge" id="net-pct1">발주액의 —</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 옵션 2 -->
+  <div id="panel2" class="card" style="display:none">
+    <div class="section-label" style="margin-bottom:8px">수익 비율 선택</div>
+    <div class="rate-group" id="rg2">
+      <button class="rate-btn selected" onclick="selectRate(2,40)">40%</button>
+      <button class="rate-btn" onclick="selectRate(2,45)">45%</button>
+      <button class="rate-btn" onclick="selectRate(2,50)">50%</button>
+      <button class="rate-btn" onclick="selectRate(2,55)">55%</button>
+    </div>
+    <div id="bonus-info2" class="bonus-info">공사비가 발주액의 15%를 초과하면 초과분의 85%가 추가 수익으로 발생합니다.</div>
+    <div class="divider-label">── 결과 ──</div>
+    <div class="result-grid">
+      <div class="metric highlight">
+        <div class="metric-label" id="base-label2">기본 수익 (자재비 × 40%)</div>
+        <div class="metric-value" id="base2">0 원</div>
+      </div>
+      <div class="metric bonus-metric">
+        <div class="metric-label">공사비 초과 추가 수익</div>
+        <div class="metric-value" id="bonus2">0 원</div>
+      </div>
+    </div>
+    <div class="metric total-metric">
+      <div class="metric-label">최종 수익 합계</div>
+      <div class="total-row-inner">
+        <span class="total-amount" id="total2">0 원</span>
+        <span class="pct-badge" id="pct2">발주액의 —</span>
+      </div>
+    </div>
+    <div id="breakdown2" class="breakdown" style="display:none"></div>
+
+    <div class="net-section" id="net-section2" style="display:none">
+      <div class="net-divider">순수익 (Net) 계산</div>
+      <div class="net-rate-group" id="nrg2">
+        <button class="net-rate-btn selected" onclick="selectNetRate(2,35)">35%</button>
+        <button class="net-rate-btn" onclick="selectNetRate(2,37)">37%</button>
+        <button class="net-rate-btn" onclick="selectNetRate(2,40)">40%</button>
+      </div>
+      <div class="net-formula" id="net-formula2"></div>
+      <div class="metric net-metric">
+        <div class="metric-label">순수익 (Net)</div>
+        <div class="total-row-inner">
+          <span class="total-amount" id="net-val2">0 원</span>
+          <span class="pct-badge net-badge" id="net-pct2">발주액의 —</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+let r1 = 30, r2 = 40, nr1 = 35, nr2 = 35;
+let lastSum1 = 0, lastSum2 = 0, lastTotal = 0;
+
+function fmt(n) { return Math.round(n).toLocaleString('ko-KR') + ' 원'; }
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+
+function switchTab(n) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === n - 1));
+  document.getElementById('panel1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('panel2').style.display = n === 2 ? '' : 'none';
+}
+
+function selectRate(panel, rate) {
+  if (panel === 1) r1 = rate; else r2 = rate;
+  document.getElementById('rg' + panel).querySelectorAll('.rate-btn')
+    .forEach(b => b.classList.toggle('selected', parseInt(b.textContent) === rate));
+  document.getElementById('base-label' + panel).textContent = panel === 1
+    ? `기본 수익 (발주액 × ${rate}%)`
+    : `기본 수익 (자재비 × ${rate}%)`;
+  calc();
+}
+
+function selectNetRate(panel, rate) {
+  if (panel === 1) nr1 = rate; else nr2 = rate;
+  document.getElementById('nrg' + panel).querySelectorAll('.net-rate-btn')
+    .forEach(b => b.classList.toggle('selected', parseInt(b.textContent) === rate));
+  updateNet(panel);
+}
+
+function updateNet(panel) {
+  const total = lastTotal;
+  const sum = panel === 1 ? lastSum1 : lastSum2;
+  const nr = panel === 1 ? nr1 : nr2;
+  if (total <= 0) return;
+  const base = total * nr / 100;
+  const net = base - sum;
+  const netPct = net / total * 100;
+  document.getElementById('net-formula' + panel).textContent =
+    `발주액 ${fmt(total)} × ${nr}% = ${fmt(base)}\n− 최종수익합계 ${fmt(sum)} = ${fmt(net)}`;
+  document.getElementById('net-val' + panel).textContent = fmt(net);
+  document.getElementById('net-pct' + panel).textContent = `발주액의 ${fmtPct(netPct)}`;
+}
+
+function calc() {
+  const media = parseFloat(document.getElementById('media').value) || 0;
+  const con = parseFloat(document.getElementById('const').value) || 0;
+  const total = media + con;
+  lastTotal = total;
+
+  document.getElementById('total-display').textContent = fmt(total);
+
+  const threshold = total * 0.15;
+  const gap = Math.max(0, con - threshold);
+  const bonusAmt = gap * 0.85;
+  const hasBonus = gap > 0 && total > 0;
+
+  const bonusMsg = total === 0
+    ? '공사비가 발주액의 15%를 초과하면 초과분의 85%가 추가 수익으로 발생합니다.'
+    : hasBonus
+      ? `✅ 공사비(${fmt(con)})가 발주액의 15%(${fmt(threshold)})를 초과\n초과분: ${fmt(gap)} × 85% = +${fmt(bonusAmt)}`
+      : `공사비(${fmt(con)})가 발주액의 15%(${fmt(threshold)}) 이하 — 추가 수익 없음`;
+
+  ['1', '2'].forEach(p => {
+    const el = document.getElementById('bonus-info' + p);
+    el.textContent = bonusMsg;
+    el.className = 'bonus-info' + (hasBonus ? ' active' : '');
+  });
+
+  const base1 = total * r1 / 100;
+  const sum1 = base1 + bonusAmt;
+  lastSum1 = sum1;
+  const pct1 = total > 0 ? (sum1 / total * 100) : 0;
+  document.getElementById('base1').textContent = fmt(base1);
+  document.getElementById('bonus1').textContent = fmt(bonusAmt);
+  document.getElementById('total1').textContent = fmt(sum1);
+  document.getElementById('pct1').textContent = total > 0 ? `발주액의 ${fmtPct(pct1)}` : '발주액의 —';
+  const bd1 = document.getElementById('breakdown1');
+  const ns1 = document.getElementById('net-section1');
+  if (total > 0) {
+    bd1.style.display = '';
+    bd1.textContent = `발주액 ${fmt(total)} × ${r1}% = ${fmt(base1)}` + (hasBonus ? `\n+ 공사비 초과분 ${fmt(gap)} × 85% = ${fmt(bonusAmt)}` : '');
+    ns1.style.display = '';
+    updateNet(1);
+  } else { bd1.style.display = 'none'; ns1.style.display = 'none'; }
+
+  const base2 = media * r2 / 100;
+  const sum2 = base2 + bonusAmt;
+  lastSum2 = sum2;
+  const pct2 = total > 0 ? (sum2 / total * 100) : 0;
+  document.getElementById('base2').textContent = fmt(base2);
+  document.getElementById('bonus2').textContent = fmt(bonusAmt);
+  document.getElementById('total2').textContent = fmt(sum2);
+  document.getElementById('pct2').textContent = total > 0 ? `발주액의 ${fmtPct(pct2)}` : '발주액의 —';
+  const bd2 = document.getElementById('breakdown2');
+  const ns2 = document.getElementById('net-section2');
+  if (total > 0) {
+    bd2.style.display = '';
+    bd2.textContent = `자재비 ${fmt(media)} × ${r2}% = ${fmt(base2)}` + (hasBonus ? `\n+ 공사비 초과분 ${fmt(gap)} × 85% = ${fmt(bonusAmt)}` : '');
+    ns2.style.display = '';
+    updateNet(2);
+  } else { bd2.style.display = 'none'; ns2.style.display = 'none'; }
+}
+
+calc();
+</script>
+</body>
+</html>
